@@ -1,3 +1,4 @@
 additional/evaluate-prometheus/.data
 .data/
 .minio.sys/
+logs
