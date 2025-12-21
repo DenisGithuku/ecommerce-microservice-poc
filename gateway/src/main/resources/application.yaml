@@ -1,18 +1,5 @@
 spring:
   application:
     name: gateway
-  cloud:
-    gateway:
-      routes:
-        - id: product-service
-          uri: lb://product-service
-          predicates:
-            - Path=/api/products/**
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-              - Path=/api/users/**
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-              - Path=/api/orders/**, /api/cart/**
+  config:
+    import: optional:configserver:http://localhost:8888
