@@ -16,3 +16,14 @@ spring:
           uri: lb://order-service
           predicates:
               - Path=/api/orders/**, /api/cart/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
