@@ -1,6 +1,5 @@
-package com.ecommerce.order.productserviceclient;
+package com.ecommerce.order.userserviceclient;
 
-import com.netflix.discovery.converters.Auto;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.propagation.Propagator;

@@ -42,9 +42,14 @@ public class UsersController {
     }
 
     @GetMapping("/validate/{id}")
-    public ResponseEntity<String> existsUser(@PathVariable String id) {
+    public ResponseEntity<ValidateUserResponseDto> existsUser(@PathVariable String id) {
         String userId = usersService.findById(id).getId();
-        return ResponseEntity.ok(userId);
+        var responseDto = ValidateUserResponseDto.builder()
+                .status(HttpStatus.OK.value())
+                .message("User found")
+                .data(userId)
+                .build();
+        return ResponseEntity.ok(responseDto);
     }
 
     @GetMapping("/{id}")
