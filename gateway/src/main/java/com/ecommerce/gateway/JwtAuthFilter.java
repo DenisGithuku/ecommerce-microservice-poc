@@ -1,6 +1,7 @@
 package com.ecommerce.gateway;
 
-import org.apache.http.HttpHeaders;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;

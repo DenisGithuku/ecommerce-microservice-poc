@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 //@Configuration
 public class GatewayConfig {
 
-    @Bean
+//    @Bean
     public RouteLocator customerRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("product-service", route -> route.path("/products/**").filters(f -> f.rewritePath("/products(?<segment>/?.*)", "/api/products${segment}")).uri("lb://product-service"))

@@ -4,6 +4,9 @@ spring:
   cloud:
     bus:
       enabled: true
+    discovery:
+      client:
+        enabled: true
   config:
     import: optional:configserver:http://localhost:8888
 #  cloud:
@@ -28,7 +31,11 @@ management:
         include: "*"
   endpoint:
     shutdown:
-      enabled: true
+      access: unrestricted
   tracing:
     sampling:
       probability: 1.0
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

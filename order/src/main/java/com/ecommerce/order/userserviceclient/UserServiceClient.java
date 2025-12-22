@@ -1,4 +1,4 @@
-package com.ecommerce.order.productserviceclient;
+package com.ecommerce.order.userserviceclient;
 
 import com.ecommerce.order.dto.ValidateUserResponseDto;
 import org.springframework.web.bind.annotation.PathVariable;

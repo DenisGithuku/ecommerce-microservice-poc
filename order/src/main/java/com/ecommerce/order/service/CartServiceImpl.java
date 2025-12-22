@@ -3,15 +3,16 @@ package com.ecommerce.order.service;
 import com.ecommerce.order.entity.Cart;
 import com.ecommerce.order.entity.CartItem;
 import com.ecommerce.order.entity.Order;
-import com.ecommerce.order.exception.DuplicateOrderException;
 import com.ecommerce.order.exception.ResourceNotFoundException;
-import com.ecommerce.order.productserviceclient.UserServiceClient;
+import com.ecommerce.order.productserviceclient.ProductServiceClient;
+import com.ecommerce.order.userserviceclient.UserServiceClient;
 import com.ecommerce.order.repository.CartItemRepository;
 import com.ecommerce.order.repository.CartRepository;
 import com.ecommerce.order.repository.OrderRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,19 +22,20 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final UserServiceClient userServiceClient;
+    private final ProductServiceClient productServiceClient;
 
-
-    @CircuitBreaker(name = "userService")
+    @CircuitBreaker(name = "userService", fallbackMethod = "createCartFallback")
     @Override
     public Cart createCart(String userId) {
         var response = userServiceClient.validateUser(userId);
-
+        System.out.println(response.getStatus());
         if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
             throw new ResourceNotFoundException("User with id: " + userId + " not found");
         }
@@ -49,8 +51,19 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
+    public Cart createCartFallback(String userId, Throwable throwable) {
+        log.error("CircuitBreaker fallback for createCart, userId {} ", userId, throwable);
+        throw new RuntimeException("Could not complete the request! Please try again later!");
+    }
+
+    @CircuitBreaker(name = "userService", fallbackMethod = "addToCartFallback")
     @Override
     public Cart addItem(Long cartId, Long productId, Integer quantity) {
+        // Verify that item exists
+        var response = productServiceClient.getProduct(productId);
+        if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
+            throw new ResourceNotFoundException("Could not find a product with id: " + productId);
+        }
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException(Cart.class, cartId.toString()));
 
@@ -65,6 +78,11 @@ public class CartServiceImpl implements CartService {
 
         cartItemRepository.save(item);
         return cartRepository.save(cart);
+    }
+
+    public Cart addToCartFallback(Long cartId, Long productId, Integer quantity, Throwable throwable) {
+        log.error("CircuitBreaker fallback for createCart, userId {} ", productId, throwable);
+        throw new RuntimeException("Could not complete the request! Please try again later!");
     }
 
     @Override
