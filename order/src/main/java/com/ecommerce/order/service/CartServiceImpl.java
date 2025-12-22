@@ -9,7 +9,10 @@ import com.ecommerce.order.productserviceclient.UserServiceClient;
 import com.ecommerce.order.repository.CartItemRepository;
 import com.ecommerce.order.repository.CartRepository;
 import com.ecommerce.order.repository.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,6 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -25,11 +29,13 @@ public class CartServiceImpl implements CartService {
     private final UserServiceClient userServiceClient;
 
 
+    @CircuitBreaker(name = "userService")
     @Override
     public Cart createCart(String userId) {
-        String id = userServiceClient.validateUser(userId);
-        if (id == null) {
-            throw new ResourceNotFoundException("User with id: " + id + " not found");
+        var response = userServiceClient.validateUser(userId);
+
+        if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
+            throw new ResourceNotFoundException("User with id: " + userId + " not found");
         }
         if (cartRepository.existsByUserId(userId)) {
             throw new RuntimeException("Cart for user: " + userId + " exists already");
