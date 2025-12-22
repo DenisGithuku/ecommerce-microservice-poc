@@ -3,7 +3,9 @@ package com.ecommerce.order.service;
 import com.ecommerce.order.entity.Cart;
 import com.ecommerce.order.entity.CartItem;
 import com.ecommerce.order.entity.Order;
+import com.ecommerce.order.exception.DuplicateCartException;
 import com.ecommerce.order.exception.ResourceNotFoundException;
+import com.ecommerce.order.exception.ServiceUnavailableException;
 import com.ecommerce.order.productserviceclient.ProductServiceClient;
 import com.ecommerce.order.userserviceclient.UserServiceClient;
 import com.ecommerce.order.repository.CartItemRepository;
@@ -40,7 +42,7 @@ public class CartServiceImpl implements CartService {
             throw new ResourceNotFoundException("User with id: " + userId + " not found");
         }
         if (cartRepository.existsByUserId(userId)) {
-            throw new RuntimeException("Cart for user: " + userId + " exists already");
+            throw new DuplicateCartException(userId);
         }
         Cart cart = Cart.builder()
                 .userId(userId)
@@ -51,9 +53,14 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
-    public Cart createCartFallback(String userId, Throwable throwable) {
+    public Cart createCartFallback(String userId, Throwable throwable) throws Throwable {
+        // Ignore business exceptions; only handle real failures
+        if (throwable instanceof ResourceNotFoundException || throwable instanceof DuplicateCartException) {
+            throw throwable;
+        }
+
         log.error("CircuitBreaker fallback for createCart, userId {} ", userId, throwable);
-        throw new RuntimeException("Could not complete the request! Please try again later!");
+        throw new ServiceUnavailableException("Could not complete the request! Please try again later!");
     }
 
     @CircuitBreaker(name = "userService", fallbackMethod = "addToCartFallback")
@@ -80,9 +87,14 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
-    public Cart addToCartFallback(Long cartId, Long productId, Integer quantity, Throwable throwable) {
+    public Cart addToCartFallback(Long cartId, Long productId, Integer quantity, Throwable throwable) throws Throwable {
+        // Ignore business exceptions; only handle real failures
+        if (throwable instanceof ResourceNotFoundException) {
+            throw throwable;
+        }
+
         log.error("CircuitBreaker fallback for createCart, userId {} ", productId, throwable);
-        throw new RuntimeException("Could not complete the request! Please try again later!");
+        throw new ServiceUnavailableException("Could not complete the request! Please try again later!");
     }
 
     @Override
