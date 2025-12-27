@@ -22,13 +22,13 @@ public class GatewayConfig {
 //                        .filters(f -> f.rewritePath("/products(?<segment>/?.*)", "/api/products${segment}"))
                         .uri("lb://product-service"))
                 .route("user-service", route -> route
-
                         .path("/api/users/**")
+                        .filters(f -> f.circuitBreaker(config -> config.setName("ecomBreaker").setFallbackUri("forward:/fallback/users")))
 //                        .filters(f ->f.rewritePath("/users(?<segment>/?.*)", "/api/users${segment}"))
                         .uri("lb://user-service"))
                 .route("order-service", route -> route
-
                         .path("/api/orders/**")
+                        .filters(f -> f.circuitBreaker(config -> config.setName("ecomBreaker").setFallbackUri("forward:/fallback/orders")))
 //                        .filters(f -> f.rewritePath("/orders(?<segment>/?.*)", "/api/orders${segment}"))
                         .uri("lb://order-service"))
                 .route("eureka-server", route -> route

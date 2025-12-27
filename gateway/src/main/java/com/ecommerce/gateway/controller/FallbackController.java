@@ -8,7 +8,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class FallbackController {
     @GetMapping("/fallback/products")
-    public ResponseEntity<FallbackProductsResponseDto> fallbackProducts() {
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new FallbackProductsResponseDto(HttpStatus.SERVICE_UNAVAILABLE.value(), "Could not fetch products!"));
+    public ResponseEntity<FallbackResponseDto> fallbackProducts() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new FallbackResponseDto(HttpStatus.SERVICE_UNAVAILABLE.value(), "Could not fetch products. Please try again later"));
+    }
+
+    @GetMapping("/fallback/users")
+    public ResponseEntity<FallbackResponseDto> fallbackUsers() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new FallbackResponseDto(HttpStatus.SERVICE_UNAVAILABLE.value(), "Could not fetch users. Please try again later"));
+    }
+
+    @GetMapping("/fallback/orders")
+    public ResponseEntity<FallbackResponseDto> fallbackOrders() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new FallbackResponseDto(HttpStatus.SERVICE_UNAVAILABLE.value(), "Could not fetch orders. Please try again later"));
     }
 }
