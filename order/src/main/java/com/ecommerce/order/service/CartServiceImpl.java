@@ -12,6 +12,7 @@ import com.ecommerce.order.repository.CartItemRepository;
 import com.ecommerce.order.repository.CartRepository;
 import com.ecommerce.order.repository.OrderRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,12 +33,13 @@ public class CartServiceImpl implements CartService {
     private final OrderRepository orderRepository;
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
+    private int attempt = 0;
 
     @CircuitBreaker(name = "userService", fallbackMethod = "createCartFallback")
     @Override
     public Cart createCart(String userId) {
         var response = userServiceClient.validateUser(userId);
-        System.out.println(response.getStatus());
+
         if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
             throw new ResourceNotFoundException("User with id: " + userId + " not found");
         }
@@ -63,11 +65,15 @@ public class CartServiceImpl implements CartService {
         throw new ServiceUnavailableException("Could not complete the request! Please try again later!");
     }
 
-    @CircuitBreaker(name = "userService", fallbackMethod = "addToCartFallback")
+
+    @CircuitBreaker(name = "productService", fallbackMethod = "addToCartFallback")
+    @Retry(name = "retryBreaker", fallbackMethod = "addToCartFallback")
     @Override
     public Cart addItem(Long cartId, Long productId, Integer quantity) {
+        System.out.println("Attempt count: "+ ++attempt);
         // Verify that item exists
         var response = productServiceClient.getProduct(productId);
+
         if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
             throw new ResourceNotFoundException("Could not find a product with id: " + productId);
         }
@@ -87,14 +93,14 @@ public class CartServiceImpl implements CartService {
         return cartRepository.save(cart);
     }
 
-    public Cart addToCartFallback(Long cartId, Long productId, Integer quantity, Throwable throwable) throws Throwable {
-        // Ignore business exceptions; only handle real failures
-        if (throwable instanceof ResourceNotFoundException) {
-            throw throwable;
-        }
+    public Cart addToCartFallback(Long cartId, Long productId, Integer quantity, Throwable throwable) {
+        log.error("Fallback triggered for cartId={}, productId={}", cartId, productId, throwable);
 
-        log.error("CircuitBreaker fallback for createCart, userId {} ", productId, throwable);
-        throw new ServiceUnavailableException("Could not complete the request! Please try again later!");
+        // convert any exception to your custom one
+        if (!(throwable instanceof ResourceNotFoundException)) {
+            throw new ServiceUnavailableException("Could not complete the request! Please try again later!", throwable);
+        }
+        throw (ResourceNotFoundException) throwable;
     }
 
     @Override
