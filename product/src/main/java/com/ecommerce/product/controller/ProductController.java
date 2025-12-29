@@ -2,6 +2,7 @@ package com.ecommerce.product.controller;
 
 import com.ecommerce.product.dto.ProductRequestDto;
 import com.ecommerce.product.dto.ProductResponseDto;
+import com.ecommerce.product.dto.ValidateProductResponseDto;
 import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.mapper.ProductMapper;
 import com.ecommerce.product.service.ProductService;
@@ -38,6 +39,17 @@ public class ProductController {
     public ResponseEntity<ProductResponseDto> getProduct(@PathVariable Long id) {
         Product product = service.getProduct(id);
         return ResponseEntity.ok(ProductMapper.mapToDto(product));
+    }
+
+    @GetMapping("/validate/{id}")
+    public ResponseEntity<ValidateProductResponseDto> existsProduct(@PathVariable Long id) {
+        Long userId = service.getProduct(id).getId();
+        var responseDto = ValidateProductResponseDto.builder()
+                .status(HttpStatus.OK.value())
+                .message("Product with id: " + id + " exists")
+                .data(userId)
+                .build();
+        return ResponseEntity.ok(responseDto);
     }
 
     @GetMapping
