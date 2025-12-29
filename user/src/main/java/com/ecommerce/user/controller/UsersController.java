@@ -3,6 +3,8 @@ package com.ecommerce.user.controller;
 import com.ecommerce.user.dto.*;
 import com.ecommerce.user.mapper.UserMapper;
 import com.ecommerce.user.service.UsersService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -53,16 +55,20 @@ public class UsersController {
     }
 
     @GetMapping("/{id}")
+    @RateLimiter(name="rateLimiter", fallbackMethod = "getUserByIdFallback")
     public ResponseEntity<GetUserResponseDto> getUserById(@PathVariable String id) {
-        log.info("Request received for user: {}", id);
-        log.trace("this is TRACE level - very detailed logs");
-        log.debug("this is DEBUG level - used for development debugging");
-        log.info("this is INFO level - General system information");
-        log.warn("this is WARN level - Something might be wrong");
-        log.error("this is ERROR level - Something must have failed");
         var user = usersService.findById(id);
         return ResponseEntity.status(HttpStatus.OK).body(UserMapper.mapToGetUserResponseDto(user));
     }
+
+    public ResponseEntity<GetUserResponseDto> getUserByIdFallback(String id, RequestNotPermitted exception) {
+        log.warn("Rate limit exceeded for getUserById({}), reason: {}", id, exception.toString());
+
+        // return a HTTP 429 (Too Many Requests)
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(null);
+    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<UpdateUserResponseDto> updateUser(@PathVariable String id, @RequestBody UpdateUserRequestDto dto) {
