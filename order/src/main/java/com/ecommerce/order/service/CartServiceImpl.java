@@ -16,11 +16,13 @@ import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class CartServiceImpl implements CartService {
     private final OrderRepository orderRepository;
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
-    private int attempt = 0;
+    private final RabbitTemplate rabbitTemplate;
 
     @CircuitBreaker(name = "userService", fallbackMethod = "createCartFallback")
     @Override
@@ -70,7 +72,6 @@ public class CartServiceImpl implements CartService {
     @Retry(name = "retryBreaker", fallbackMethod = "addToCartFallback")
     @Override
     public Cart addItem(Long cartId, Long productId, Integer quantity) {
-        System.out.println("Attempt count: "+ ++attempt);
         // Verify that item exists
         var response = productServiceClient.getProduct(productId);
 
@@ -150,6 +151,9 @@ public class CartServiceImpl implements CartService {
         orderRepository.save(order);
 
         cart.setCheckedOut(true);
+        rabbitTemplate.convertAndSend("order.exchange",
+                "order.tracking",
+                Map.of("orderId", cart.getId(), "status", "CREATED"));
         cartRepository.save(cart);
 
         return order;
