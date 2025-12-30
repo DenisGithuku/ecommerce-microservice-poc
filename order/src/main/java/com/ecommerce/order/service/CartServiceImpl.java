@@ -153,7 +153,7 @@ public class CartServiceImpl implements CartService {
         cart.setCheckedOut(true);
         rabbitTemplate.convertAndSend("order.exchange",
                 "order.tracking",
-                Map.of("orderId", cart.getId(), "status", "CREATED"));
+                Map.of("orderId", cart.getId(), "status", "CHECKED OUT"));
         cartRepository.save(cart);
 
         return order;
