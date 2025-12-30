@@ -42,6 +42,8 @@ services:
     ports:
       - "5672:5672" # RabbitMQ Message Broker
       - "15672:15672" # RabbitMQ Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - backend
     restart: unless-stopped
@@ -52,3 +54,4 @@ networks:
 volumes:
   postgres:
   pgadmin:
+  rabbitmq_data:
