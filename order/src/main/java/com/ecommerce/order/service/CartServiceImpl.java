@@ -1,5 +1,7 @@
 package com.ecommerce.order.service;
 
+import com.ecommerce.order.dto.CartItemDto;
+import com.ecommerce.order.dto.OrderCreatedEvent;
 import com.ecommerce.order.entity.Cart;
 import com.ecommerce.order.entity.CartItem;
 import com.ecommerce.order.entity.Order;
@@ -20,9 +22,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,9 +155,22 @@ public class CartServiceImpl implements CartService {
         orderRepository.save(order);
 
         cart.setCheckedOut(true);
+
+        // Create order event
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getId(),
+                order.getUserId(),
+                cart.getItems().stream().map(item -> new CartItemDto(
+                        item.getId(),
+                        item.getProductId(),
+                        item.getQuantity()
+                )).collect(Collectors.toList()),
+                BigDecimal.valueOf(10000),
+                order.getCreatedAt()
+        );
         rabbitTemplate.convertAndSend("order.exchange",
                 "order.tracking",
-                Map.of("orderId", cart.getId(), "status", "CHECKED OUT"));
+                event);
         cartRepository.save(cart);
 
         return order;
