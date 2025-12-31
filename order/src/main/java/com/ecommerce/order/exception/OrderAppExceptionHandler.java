@@ -105,12 +105,12 @@ public class OrderAppExceptionHandler {
     }
 
     // handle generic exception
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleException(
-            Exception exception, HttpServletRequest request) {
+            RuntimeException exception, HttpServletRequest request) {
         log.error("Unexpected exception 💥: ", exception);
         var errorResponse = ErrorResponse.builder()
-                .message("Internal server error")
+                .message(exception.getLocalizedMessage())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .timestamp(System.currentTimeMillis())
                 .path(request.getRequestURI()).build();

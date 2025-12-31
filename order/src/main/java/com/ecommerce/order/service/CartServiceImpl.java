@@ -1,5 +1,7 @@
 package com.ecommerce.order.service;
 
+import com.ecommerce.order.dto.CartItemDto;
+import com.ecommerce.order.dto.OrderCreatedEvent;
 import com.ecommerce.order.entity.Cart;
 import com.ecommerce.order.entity.CartItem;
 import com.ecommerce.order.entity.Order;
@@ -16,11 +18,15 @@ import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +39,7 @@ public class CartServiceImpl implements CartService {
     private final OrderRepository orderRepository;
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
-    private int attempt = 0;
+    private final RabbitTemplate rabbitTemplate;
 
     @CircuitBreaker(name = "userService", fallbackMethod = "createCartFallback")
     @Override
@@ -70,7 +76,6 @@ public class CartServiceImpl implements CartService {
     @Retry(name = "retryBreaker", fallbackMethod = "addToCartFallback")
     @Override
     public Cart addItem(Long cartId, Long productId, Integer quantity) {
-        System.out.println("Attempt count: "+ ++attempt);
         // Verify that item exists
         var response = productServiceClient.getProduct(productId);
 
@@ -150,6 +155,22 @@ public class CartServiceImpl implements CartService {
         orderRepository.save(order);
 
         cart.setCheckedOut(true);
+
+        // Create order event
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getId(),
+                order.getUserId(),
+                cart.getItems().stream().map(item -> new CartItemDto(
+                        item.getId(),
+                        item.getProductId(),
+                        item.getQuantity()
+                )).collect(Collectors.toList()),
+                BigDecimal.valueOf(10000),
+                order.getCreatedAt()
+        );
+        rabbitTemplate.convertAndSend("order.exchange",
+                "order.tracking",
+                event);
         cartRepository.save(cart);
 
         return order;

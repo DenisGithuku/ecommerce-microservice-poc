@@ -3,3 +3,4 @@ additional/evaluate-prometheus/.data
 .minio.sys/
 logs
 .idea
+.env
