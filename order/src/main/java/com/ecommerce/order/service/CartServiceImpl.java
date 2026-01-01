@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,8 @@ public class CartServiceImpl implements CartService {
     private final OrderRepository orderRepository;
     private final UserServiceClient userServiceClient;
     private final ProductServiceClient productServiceClient;
-    private final RabbitTemplate rabbitTemplate;
+//    private final RabbitTemplate rabbitTemplate;
+    private final StreamBridge streamBridge;
 
     @CircuitBreaker(name = "userService", fallbackMethod = "createCartFallback")
     @Override
@@ -168,8 +170,7 @@ public class CartServiceImpl implements CartService {
                 BigDecimal.valueOf(10000),
                 order.getCreatedAt()
         );
-        rabbitTemplate.convertAndSend("order.exchange",
-                "order.tracking",
+        streamBridge.send("createOrder-out-0",
                 event);
         cartRepository.save(cart);
 
