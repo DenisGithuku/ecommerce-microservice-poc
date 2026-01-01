@@ -2,7 +2,6 @@ package com.ecommerce.notification.service;
 
 import com.ecommerce.notification.payload.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
