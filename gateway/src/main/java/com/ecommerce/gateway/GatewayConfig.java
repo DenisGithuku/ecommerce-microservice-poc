@@ -43,13 +43,10 @@ public class GatewayConfig {
 //                        .filters(f -> f.rewritePath("/orders(?<segment>/?.*)", "/api/orders${segment}"))
                         .uri("lb://order-service"))
                 .route("eureka-server", route -> route
-
-                        .path("/eureka/main")
-//                        .filters(f -> f.rewritePath("eureka/main", "/"))
+                        .path("/eureka/**")
+                        .filters(f -> f.rewritePath("/eureka/(?<segment>.*)", "/"))
                         .uri("http://localhost:8761"))
-                .route("eureka-server-static", route -> route
 
-                        .path("/eureka/**").uri("http://localhost:8761"))
                 .build();
     }
 }
