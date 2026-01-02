@@ -25,7 +25,11 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity) {
         httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable);
-        httpSecurity.authorizeExchange(exchange -> exchange.anyExchange().authenticated());
+        httpSecurity.authorizeExchange(exchange -> exchange
+                .pathMatchers("/api/products/**").hasRole("PRODUCT")
+                .pathMatchers("/api/users/**").hasRole("USER")
+                .pathMatchers("/api/orders/**").hasRole("ORDER")
+                .anyExchange().authenticated());
         return httpSecurity // Every client has to provide a token before they access anything
                 .oauth2ResourceServer(oAuth2ResourceServerSpec -> {
                     oAuth2ResourceServerSpec.jwt(jwtSpec -> jwtSpec.jwtAuthenticationConverter(grantedAuthoritiesExtractor()));
