@@ -22,6 +22,7 @@ import java.time.Instant;
 public class User {
     @Id
     private String id;
+    private String keycloakId;
     private String username;
     private String phone;
     private Role role;
