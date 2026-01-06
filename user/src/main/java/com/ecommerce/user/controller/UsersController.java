@@ -2,6 +2,7 @@ package com.ecommerce.user.controller;
 
 import com.ecommerce.user.dto.*;
 import com.ecommerce.user.mapper.UserMapper;
+import com.ecommerce.user.service.KeyCloakAdminService;
 import com.ecommerce.user.service.UsersService;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -22,6 +23,7 @@ import java.lang.String;
 public class UsersController {
 
     private final UsersService usersService;
+    private final KeyCloakAdminService keyCloakAdminService;
 //    private final static Logger logger = LoggerFactory.getLogger(UsersController.class);
 
     @GetMapping
@@ -33,7 +35,10 @@ public class UsersController {
 
     @PostMapping
     public ResponseEntity<CreateUserResponseDto> createUser(@RequestBody CreateUserRequestDto dto) {
+        String token = keyCloakAdminService.getAccessToken();
+        keyCloakAdminService.createUser(token, dto);
         var savedUser = usersService.save(UserMapper.mapFromCreateUserRequestDtoToUser(dto));
+        savedUser.setKeycloakId(savedUser.getKeycloakId());
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.mapToCreateUserResponseDto(savedUser));
     }
 

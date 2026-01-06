@@ -24,8 +24,11 @@ public class UserMapper {
 
     public static CreateUserRequestDto mapToCreateUserRequestDto(User user) {
         return new CreateUserRequestDto(
+                user.getFirstName(),
+                user.getLastName(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getPassword(),
                 user.getPhone(),
                 user.getRole().name(),
                 user.getAddress(),

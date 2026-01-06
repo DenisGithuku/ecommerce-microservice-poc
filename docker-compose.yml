@@ -86,3 +86,4 @@ volumes:
   postgres:
   pgadmin:
   rabbitmq_data:
+  keycloak_db:
