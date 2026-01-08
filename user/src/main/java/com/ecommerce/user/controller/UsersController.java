@@ -36,10 +36,25 @@ public class UsersController {
     @PostMapping
     public ResponseEntity<CreateUserResponseDto> createUser(@RequestBody CreateUserRequestDto dto) {
         String token = keyCloakAdminService.getAccessToken();
-        keyCloakAdminService.createUser(token, dto);
-        var savedUser = usersService.save(UserMapper.mapFromCreateUserRequestDtoToUser(dto));
-        savedUser.setKeycloakId(savedUser.getKeycloakId());
+        String keycloakId = keyCloakAdminService.createUser(token, dto);
+        var newUser = UserMapper.mapFromCreateUserRequestDtoToUser(dto);
+        newUser.setKeycloakId(keycloakId);
+        var savedUser = usersService.save(newUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.mapToCreateUserResponseDto(savedUser));
+    }
+
+    @PutMapping("/{userId}/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @PathVariable("userId") String keycloakUserId,
+            @RequestBody UpdatePasswordRequestDto dto
+    ) {
+        // 1. Fetch access token
+        String accessToken = keyCloakAdminService.getAccessToken();
+
+        // 2. Update password and return message
+        keyCloakAdminService.setUserPassword(keycloakUserId, accessToken, dto.password());
+
+        return ResponseEntity.status(HttpStatus.OK).body("Password updated successfully!");
     }
 
     @DeleteMapping("/{id}")

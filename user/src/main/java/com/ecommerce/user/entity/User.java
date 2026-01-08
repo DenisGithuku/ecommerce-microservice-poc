@@ -28,7 +28,6 @@ public class User {
     private String password;
     private String username;
     private String phone;
-    private Role role;
     @Indexed(unique = true)
     private String email;
     private Address address;

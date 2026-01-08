@@ -31,11 +31,18 @@ public class KeyCloakAdminService {
     @Value("${keycloak.admin.client-id}")
     private String clientId;
 
+    @Value("${keycloak.admin.client-secret}")
+    private String clientSecret;
+
+    @Value("${keycloak.admin.client-uid}")
+    private String clientUid;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getAccessToken() {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", clientId);
+        params.add("client_secret", clientSecret);
         params.add("username", username);
         params.add("password", password);
         params.add("grant_type", "password");
@@ -45,6 +52,8 @@ public class KeyCloakAdminService {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
 
         String url = keycloakServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+        System.out.println(url);
+        System.out.println(params);
         ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
         return (String) response.getBody().get("access_token");
     }
@@ -59,16 +68,11 @@ public class KeyCloakAdminService {
         userPayload.put("enabled", true);
         userPayload.put("firstName", userRequest.firstName());
         userPayload.put("lastName", userRequest.lastName());
-        Map<String, Object> credentials = new HashMap<>();
-        credentials.put("type", "password");
-        credentials.put("value", userRequest.password());
-        credentials.put("temporary", false);
 
-        userPayload.put("credentials", List.of(credentials));
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(userPayload, headers);
-        String url = keycloakServerUrl + "/admin/realms" + realm + "/users";
+        String url = keycloakServerUrl + "/admin/realms/" + realm + "/users";
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-        if (HttpStatus.CREATED == response.getStatusCode()) {
+        if (HttpStatus.CREATED != response.getStatusCode()) {
             throw new RuntimeException("Could not create a user in keycloak" + response.getBody());
         }
         // Extract keycloak user id
@@ -79,4 +83,37 @@ public class KeyCloakAdminService {
         String path = location.getPath();
         return path.substring(path.lastIndexOf("/") + 1);
     }
+
+    public void setUserPassword(String userId, String accessToken, String password) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "password");
+        payload.put("value", password);
+        payload.put("temporary", false);
+
+        HttpEntity<Map<String, Object>> entity =
+                new HttpEntity<>(payload, headers);
+
+        String url = keycloakServerUrl +
+                "/admin/realms/" + realm +
+                "/users/" + userId +
+                "/reset-password";
+
+        restTemplate.put(url, entity);
+    }
+
+    public Map<String, Object> getRealmRoleRepresentation(String token, String roleName) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        String url = keycloakServerUrl + "/admin/realms/" + realm + "/clients/" + clientUid + "/roles/" + roleName;
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+        return response.getBody();
+    }
+
 }

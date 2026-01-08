@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -26,6 +25,7 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity) {
         httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable);
         httpSecurity.authorizeExchange(exchange -> exchange
+                .pathMatchers("/eureka/**").hasRole("ADMIN")
                 .pathMatchers("/api/products/**").hasRole("PRODUCT")
                 .pathMatchers("/api/users/**").hasRole("USER")
                 .pathMatchers("/api/orders/**").hasRole("ORDER")
@@ -38,15 +38,30 @@ public class SecurityConfig {
     }
 
     private Converter<Jwt, Mono<AbstractAuthenticationToken>> grantedAuthoritiesExtractor() {
-        ReactiveJwtAuthenticationConverter jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            List<String> roles = jwt.getClaimAsMap("resource_access")
-                    .entrySet().stream()
-                    .filter(entry -> entry.getKey().equals("oauth2-pkce"))
-                    .flatMap(entry -> ((Map<String, List<String>>) entry.getValue()).get("roles").stream()).toList();
-            System.out.println("Extracted roles: " + roles);
-            return Flux.fromIterable(roles).map(role -> new SimpleGrantedAuthority("ROLE_"+role));
+
+        ReactiveJwtAuthenticationConverter converter =
+                new ReactiveJwtAuthenticationConverter();
+
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Map<String, Object> realmAccess =
+                    jwt.getClaimAsMap("realm_access");
+
+            if (realmAccess == null) {
+                return Flux.empty();
+            }
+
+            List<String> roles =
+                    (List<String>) realmAccess.get("roles");
+
+            if (roles == null) {
+                return Flux.empty();
+            }
+
+            return Flux.fromIterable(roles)
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role));
         });
-        return jwtAuthenticationConverter;
+
+        return converter;
     }
+
 }

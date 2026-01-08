@@ -76,8 +76,11 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: true
+      KC_PROXY_HEADERS: xforwarded
     image: quay.io/keycloak/keycloak:26.4.7
     command: start-dev
+
 networks:
   backend:
     driver: bridge
@@ -86,4 +89,3 @@ volumes:
   postgres:
   pgadmin:
   rabbitmq_data:
-  keycloak_db:
