@@ -2,6 +2,7 @@ package com.ecommerce.user.controller;
 
 import com.ecommerce.user.dto.*;
 import com.ecommerce.user.mapper.UserMapper;
+import com.ecommerce.user.service.KeyCloakAdminService;
 import com.ecommerce.user.service.UsersService;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -22,6 +23,7 @@ import java.lang.String;
 public class UsersController {
 
     private final UsersService usersService;
+    private final KeyCloakAdminService keyCloakAdminService;
 //    private final static Logger logger = LoggerFactory.getLogger(UsersController.class);
 
     @GetMapping
@@ -33,8 +35,26 @@ public class UsersController {
 
     @PostMapping
     public ResponseEntity<CreateUserResponseDto> createUser(@RequestBody CreateUserRequestDto dto) {
-        var savedUser = usersService.save(UserMapper.mapFromCreateUserRequestDtoToUser(dto));
+        String token = keyCloakAdminService.getAccessToken();
+        String keycloakId = keyCloakAdminService.createUser(token, dto);
+        var newUser = UserMapper.mapFromCreateUserRequestDtoToUser(dto);
+        newUser.setKeycloakId(keycloakId);
+        var savedUser = usersService.save(newUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.mapToCreateUserResponseDto(savedUser));
+    }
+
+    @PutMapping("/{userId}/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @PathVariable("userId") String keycloakUserId,
+            @RequestBody UpdatePasswordRequestDto dto
+    ) {
+        // 1. Fetch access token
+        String accessToken = keyCloakAdminService.getAccessToken();
+
+        // 2. Update password and return message
+        keyCloakAdminService.setUserPassword(keycloakUserId, accessToken, dto.password());
+
+        return ResponseEntity.status(HttpStatus.OK).body("Password updated successfully!");
     }
 
     @DeleteMapping("/{id}")

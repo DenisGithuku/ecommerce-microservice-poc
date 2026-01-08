@@ -23,9 +23,11 @@ public class User {
     @Id
     private String id;
     private String keycloakId;
+    private String firstName;
+    private String lastName;
+    private String password;
     private String username;
     private String phone;
-    private Role role;
     @Indexed(unique = true)
     private String email;
     private Address address;

@@ -29,7 +29,6 @@ public class UsersServiceImpl implements UsersService {
     public User save(User user) {
         if (usersRepository.existsByEmailIgnoreCase(user.getEmail()))
             throw new DuplicateEmailException(user.getEmail());
-        user.setRole(Role.CUSTOMER);
         var address = addressesRepository.save(user.getAddress());
         user.setAddress(address);
         return usersRepository.save(user);

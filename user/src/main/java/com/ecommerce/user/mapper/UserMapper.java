@@ -13,7 +13,6 @@ public class UserMapper {
                 .username(dto.username())
                 .email(dto.email())
                 .phone(dto.phone())
-                .role(Role.CUSTOMER)
                 .address(dto.address())
                 .build();
     }
@@ -24,10 +23,12 @@ public class UserMapper {
 
     public static CreateUserRequestDto mapToCreateUserRequestDto(User user) {
         return new CreateUserRequestDto(
+                user.getFirstName(),
+                user.getLastName(),
                 user.getUsername(),
                 user.getEmail(),
+                user.getPassword(),
                 user.getPhone(),
-                user.getRole().name(),
                 user.getAddress(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -35,7 +36,7 @@ public class UserMapper {
     }
 
     public static GetUserResponseDto mapToGetUserResponseDto(User user) {
-        return new GetUserResponseDto(user.getId(), user.getUsername(), user.getEmail(), user.getPhone(), user.getRole(), user.getAddress());
+        return new GetUserResponseDto(user.getId(), user.getUsername(), user.getEmail(), user.getPhone(), user.getAddress());
     }
 
     public static UpdateUserResponseDto mapToUpdateUserResponseDto(User user) {
