@@ -25,7 +25,6 @@ public class User {
     private String keycloakId;
     private String firstName;
     private String lastName;
-    private String password;
     private String username;
     private String phone;
     @Indexed(unique = true)
