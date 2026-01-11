@@ -15,10 +15,12 @@ spring:
 #        - 127.0.0.1
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASS}
+    virtual-host: ${RABBITMQ_VHOST}
+    connection-timout: 30000
 
 management:
   endpoints:
