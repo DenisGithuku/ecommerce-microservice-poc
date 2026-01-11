@@ -1,17 +1,17 @@
 package com.ecommerce.user.service;
 
 import com.ecommerce.user.dto.CreateUserRequestDto;
-import jakarta.ws.rs.core.Link;
+import com.ecommerce.user.exception.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -59,29 +59,33 @@ public class KeyCloakAdminService {
     }
 
     public String createUser(String accessToken, CreateUserRequestDto userRequest) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(accessToken);
-        Map<String, Object> userPayload = new HashMap<>();
-        userPayload.put("username", userRequest.username());
-        userPayload.put("email", userRequest.email());
-        userPayload.put("enabled", true);
-        userPayload.put("firstName", userRequest.firstName());
-        userPayload.put("lastName", userRequest.lastName());
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(accessToken);
+            Map<String, Object> userPayload = new HashMap<>();
+            userPayload.put("username", userRequest.username());
+            userPayload.put("email", userRequest.email());
+            userPayload.put("enabled", true);
+            userPayload.put("firstName", userRequest.firstName());
+            userPayload.put("lastName", userRequest.lastName());
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(userPayload, headers);
-        String url = keycloakServerUrl + "/admin/realms/" + realm + "/users";
-        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-        if (HttpStatus.CREATED != response.getStatusCode()) {
-            throw new RuntimeException("Could not create a user in keycloak" + response.getBody());
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(userPayload, headers);
+            String url = keycloakServerUrl + "/admin/realms/" + realm + "/users";
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            if (HttpStatus.CREATED != response.getStatusCode()) {
+                throw new RuntimeException("Could not create a user in keycloak" + response.getBody());
+            }
+            // Extract keycloak user id
+            URI location = response.getHeaders().getLocation();
+            if (location == null) {
+                throw new RuntimeException("Keycloak did not return any Location header");
+            }
+            String path = location.getPath();
+            return path.substring(path.lastIndexOf("/") + 1);
+        } catch (HttpClientErrorException.Conflict exception) {
+            throw new UserAlreadyExistsException(exception.getLocalizedMessage());
         }
-        // Extract keycloak user id
-        URI location = response.getHeaders().getLocation();
-        if (location == null) {
-            throw new RuntimeException("Keycloak did not return any Location header");
-        }
-        String path = location.getPath();
-        return path.substring(path.lastIndexOf("/") + 1);
     }
 
     public void setUserPassword(String userId, String accessToken, String password) {

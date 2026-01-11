@@ -1,15 +1,15 @@
 package com.ecommerce.user.mapper;
 
 import com.ecommerce.user.entity.Address;
-import com.ecommerce.user.entity.Role;
 import com.ecommerce.user.entity.User;
 import com.ecommerce.user.dto.*;
-
-import java.time.Instant;
 
 public class UserMapper {
     public static User mapFromCreateUserRequestDtoToUser(CreateUserRequestDto dto) {
         return User.builder()
+                .username(dto.username())
+                .firstName(dto.firstName())
+                .lastName(dto.lastName())
                 .username(dto.username())
                 .email(dto.email())
                 .phone(dto.phone())
@@ -27,7 +27,6 @@ public class UserMapper {
                 user.getLastName(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getPassword(),
                 user.getPhone(),
                 user.getAddress(),
                 user.getCreatedAt(),
