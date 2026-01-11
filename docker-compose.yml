@@ -94,6 +94,15 @@ services:
       - "27017:27017"
     networks:
       - backend
+  config-server:
+    build: ./configserver
+    container_name: configserver_container
+    ports:
+      - "8888:8888"
+    networks:
+      - backend
+    env_file:
+      - ./configserver/.env
 
 networks:
   backend:

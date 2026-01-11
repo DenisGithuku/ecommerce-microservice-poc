@@ -15,12 +15,12 @@ spring:
 #        - 127.0.0.1
 
   rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USERNAME}
-    password: ${RABBITMQ_PASS}
-    virtual-host: ${RABBITMQ_VHOST}
-    connection-timout: 30000
+    host: ${SPRING_RABBITMQ_HOST}
+    port: ${SPRING_RABBITMQ_PORT}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASS}
+    virtual-host: ${SPRING_RABBITMQ_VHOST}
+    connection-timeout: 30000
 
 management:
   endpoints:
