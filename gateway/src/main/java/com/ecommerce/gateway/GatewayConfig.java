@@ -45,7 +45,7 @@ public class GatewayConfig {
                 .route("eureka-server", route -> route
                         .path("/eureka/**")
                         .filters(f -> f.rewritePath("/eureka/(?<segment>.*)", "/"))
-                        .uri("http://localhost:8761"))
+                        .uri("http://eurekaserver:8761"))
 
                 .build();
     }
