@@ -1,8 +1,9 @@
 spring:
   application:
     name: order-service
-  profiles:
-    active: default
+  jpa:
+    hibernate:
+      ddl-auto: create
   cloud:
     bus:
       enabled: true
@@ -16,7 +17,7 @@ spring:
 #    show-sql: true
 #    database-platform: org.hibernate.dialect.PostgreSQLDialect
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://configserver:8888
 #  h2:
 #    console:
 #      enabled: true

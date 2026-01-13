@@ -1,14 +1,16 @@
 spring:
   application:
     name: user-service
-  profiles:
-    active: default
-#  data:
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+  #  data:
 #    mongodb:
 #      uri: mongodb://localhost:27017/userdb
 #      auto-index-creation: true
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://configserver:8888
 #  datasource:
 #    url: jdbc:postgresql://localhost:5432/user
 #    username: denisgithuku
