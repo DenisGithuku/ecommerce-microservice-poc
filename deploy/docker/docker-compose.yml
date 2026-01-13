@@ -8,7 +8,7 @@ services:
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - ../../postgres-init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -102,14 +102,14 @@ services:
     networks:
       - backend
   configserver:
-    build: ./configserver
+    build: ../../configserver
     container_name: configserver_container
     ports:
       - "8888:8888"
     networks:
       - backend
     env_file:
-      - ./configserver/.env
+      - ../../configserver/.env
     volumes:
       - ./configserver/src/main/resources:/config
     healthcheck:
@@ -119,7 +119,7 @@ services:
       retries: 5
 
   eurekaserver:
-    build: ./eurekaserver
+    build: ../../eurekaserver
     container_name: eurekaserver_container
     ports:
       - "8761:8761"
@@ -134,7 +134,7 @@ services:
       retries: 5
 
   gateway:
-    build: ./gateway
+    build: ../../gateway
     container_name: gateway_container
     ports:
       - "8080:8080"
@@ -156,7 +156,7 @@ services:
 
 
   notification:
-    build: ./notification
+    build: ../../notification
     container_name: notification_container
     ports:
       - "8084:8084"
@@ -180,7 +180,7 @@ services:
 
 
   order:
-    build: ./order
+    build: ../../order
     container_name: order_container
     ports:
       - "8083:8083"
@@ -208,7 +208,7 @@ services:
 
 
   product:
-    build: ./product
+    build: ../../product
     container_name: product_container
     ports:
       - "8081:8081"
@@ -232,7 +232,7 @@ services:
         condition: service_healthy
 
   user:
-    build: ./user
+    build: ../../user
     container_name: user_container
     ports:
       - "8082:8082"
