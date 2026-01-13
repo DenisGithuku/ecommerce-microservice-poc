@@ -1,6 +1,9 @@
 spring:
   application:
     name: order-service
+  jpa:
+    hibernate:
+      ddl-auto: create
   cloud:
     bus:
       enabled: true

@@ -1,11 +1,15 @@
 spring:
   application:
-    name: order-service
+    name: product-service
+  jpa:
+    hibernate:
+      ddl-auto: create
   cloud:
     bus:
       enabled: true
 #  datasource:
-#    url: jdbc:postgresql://localhost:5432/order
+#    url: jdbc:postgresql://localhost:5432/product
+##    url: jdbc:postgresql://ep-aged-dew-a4ck7zv4-pooler.us-east-1.aws.neon.tech/product?sslmode=require&channelBinding=require
 #    username: denisgithuku
 #    password: 5ub05p4rg3
 #  jpa:
@@ -28,7 +32,7 @@ spring:
 #    hibernate:
 #      ddl-auto: create
 #server:
-#  port: 8083
+#  port: 8081
 #logging:
 #  pattern:
 #    console: ${LOGPATTERN_CONSOLE:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) - %msg%n}
@@ -47,4 +51,3 @@ spring:
     port: 5672
     username: guest
     password: guest
-
